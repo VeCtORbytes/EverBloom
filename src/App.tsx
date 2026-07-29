@@ -4,10 +4,13 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { StatsHUD } from '@/dev/StatsHUD';
 import { SceneJumper } from '@/dev/SceneJumper';
+import { SigilTrainer } from '@/dev/SigilTrainer';
+import { SigilGhost } from '@/engine/sigils/SigilGhost';
 import { useScene } from '@/engine/core/hooks';
 import { ThreadTrail } from '@/engine/thread/ThreadTrail';
 import { CursorMote } from '@/engine/thread/CursorMote';
 import { useThread } from '@/engine/thread/useThread';
+import { useSigil } from '@/engine/sigils/useSigil';
 
 const PlaceholderMesh: React.FC = () => {
   const meshRef = useRef<THREE.Mesh>(null);
@@ -35,13 +38,18 @@ const PlaceholderMesh: React.FC = () => {
 export const App: React.FC = () => {
   const { currentScene } = useScene();
   const { isDrawing } = useThread();
+  const { assistActive } = useSigil();
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <StatsHUD />
       <SceneJumper />
+      <SigilTrainer />
 
-      {/* Active Scene Overlay HUD */}
+      {/* Ghost Path Assist Overlay */}
+      <SigilGhost sigilId="kindle" visible={assistActive} />
+
+      {/* Active Scene & Thread Overlay HUD */}
       <div
         style={{
           position: 'fixed',
@@ -67,7 +75,7 @@ export const App: React.FC = () => {
         </span>
         <span style={{ opacity: 0.4 }}>|</span>
         <span>
-          Thread State:{' '}
+          Thread:{' '}
           <strong style={{ color: isDrawing ? '#10b981' : '#f4ebd9' }}>
             {isDrawing ? 'Drawing' : 'Idle'}
           </strong>
@@ -88,7 +96,7 @@ export const App: React.FC = () => {
         <pointLight position={[10, 10, 10]} intensity={1.5} color="#f59e0b" />
         <PlaceholderMesh />
 
-        {/* Phase 3 Thread Verb */}
+        {/* Phase 3 & 4 Components */}
         <ThreadTrail />
         <CursorMote />
       </Canvas>
