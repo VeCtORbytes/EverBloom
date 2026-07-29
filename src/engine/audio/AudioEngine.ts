@@ -71,7 +71,7 @@ export class AudioEngine {
 
     try {
       howl.play();
-    } catch (e) {
+    } catch {
       // Ignored for missing files; synth fallback handles sound
     }
 
@@ -95,7 +95,8 @@ export class AudioEngine {
 
   private synthesizeChime(freqs: number[], durationSec: number, volumeGain: number = 0.5): void {
     try {
-      const ctx = Howler.ctx || new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = Howler.ctx || new audioCtxClass();
       if (!ctx || ctx.state === 'suspended') return;
 
       freqs.forEach((freq, idx) => {
@@ -116,14 +117,15 @@ export class AudioEngine {
         osc.start(startTime);
         osc.stop(startTime + durationSec);
       });
-    } catch (e) {
+    } catch {
       // AudioContext unavailable
     }
   }
 
   private synthesizeBuzz(freq: number, durationSec: number, volumeGain: number = 0.5): void {
     try {
-      const ctx = Howler.ctx || new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = Howler.ctx || new audioCtxClass();
       if (!ctx || ctx.state === 'suspended') return;
 
       const osc = ctx.createOscillator();
@@ -141,7 +143,7 @@ export class AudioEngine {
 
       osc.start();
       osc.stop(ctx.currentTime + durationSec);
-    } catch (e) {
+    } catch {
       // AudioContext unavailable
     }
   }
