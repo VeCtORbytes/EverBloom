@@ -18,8 +18,9 @@ import { AudioProvider } from '@/engine/audio/AudioProvider';
 import { SeedPulseProgress } from '@/ui/SeedPulseProgress';
 import { Overlay } from '@/ui/Overlay';
 import { Captions } from '@/ui/Captions';
+import { PrologueWorld } from '@/worlds/prologue/PrologueWorld';
 
-const InteractiveSceneContent: React.FC = () => {
+const TestSceneContent: React.FC = () => {
   const [activeMessage, setActiveMessage] = useState<string | null>(null);
 
   useFrame(() => {
@@ -79,6 +80,28 @@ const InteractiveSceneContent: React.FC = () => {
       )}
     </>
   );
+};
+
+const ActiveSceneContent: React.FC = () => {
+  const { currentScene } = useScene();
+
+  useFrame(() => {
+    const [cursorX, cursorY] = globalThreadController.getCursorPos();
+    globalInteractionRegistry.updateHover(cursorX, cursorY);
+  });
+
+  if (currentScene === 'prologue') {
+    return (
+      <>
+        <PrologueWorld />
+        <FocusRing />
+        <ThreadTrail />
+        <CursorMote />
+      </>
+    );
+  }
+
+  return <TestSceneContent />;
 };
 
 const MessageToast: React.FC<{ message: string; onDismiss: () => void }> = ({ message, onDismiss }) => {
@@ -197,7 +220,7 @@ export const App: React.FC = () => {
           camera={{ position: [0, 0, 5], fov: 60 }}
           style={{ background: '#0b090a' }}
         >
-          <InteractiveSceneContent />
+          <ActiveSceneContent />
         </Canvas>
       </div>
     </AudioProvider>
