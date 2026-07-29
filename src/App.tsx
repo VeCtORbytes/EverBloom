@@ -16,6 +16,8 @@ import { globalInteractionRegistry } from '@/engine/interaction/InteractionRegis
 import { globalThreadController } from '@/engine/thread/ThreadController';
 import { AudioProvider } from '@/engine/audio/AudioProvider';
 import { SeedPulseProgress } from '@/ui/SeedPulseProgress';
+import { Overlay } from '@/ui/Overlay';
+import { Captions } from '@/ui/Captions';
 
 const InteractiveSceneContent: React.FC = () => {
   const [activeMessage, setActiveMessage] = useState<string | null>(null);
@@ -139,6 +141,8 @@ export const App: React.FC = () => {
         <StatsHUD />
         <SceneJumper />
         <SigilTrainer />
+        <Overlay />
+        <Captions />
 
         {/* Ghost Path Assist Overlay */}
         <SigilGhost sigilId="kindle" visible={assistActive} />
