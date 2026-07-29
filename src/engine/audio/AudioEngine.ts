@@ -21,16 +21,13 @@ export class AudioEngine {
     if (this.unlockListenersAttached || this.isUnlocked) return;
 
     const unlockHandler = () => {
-      if (this.isUnlocked) return;
-      
-      // Resume Howler audio context if suspended
+      this.isUnlocked = true;
       if (Howler.ctx && Howler.ctx.state === 'suspended') {
-        Howler.ctx.resume().then(() => {
-          this.isUnlocked = true;
-        });
-      } else {
-        this.isUnlocked = true;
+        Howler.ctx.resume();
       }
+
+      // Play subtle unlock chime via WebAudio synth
+      this.synthesizeChime([440, 554, 659], 0.15);
 
       container.removeEventListener('pointerdown', unlockHandler);
       container.removeEventListener('keydown', unlockHandler);
@@ -51,22 +48,102 @@ export class AudioEngine {
     const effectiveGain = calculateEffectiveVolume(cueSpec.bus, this.volumes, this.isDucked);
     const finalVolume = (overrideVolume ?? cueSpec.volume ?? 1.0) * effectiveGain;
 
-    // Check if instance already running for looped music/ambience
+    if (finalVolume <= 0) return null;
+
+    // WebAudio Synthesizer fallback for immediate audible feedback
+    this.playSynthesizedCue(cueId, finalVolume);
+
     let howl = this.activeHowls.get(cueId);
     if (!howl) {
       howl = new Howl({
         src: [`/audio/${cueSpec.bus}/${cueId.replace(/\./g, '_')}.mp3`],
         loop: cueSpec.loop ?? false,
         volume: finalVolume,
-        html5: cueSpec.bus === 'music', // Stream long music stems
+        html5: cueSpec.bus === 'music',
+        onloaderror: () => {
+          // Quietly fall back to WebAudio synthesis if file is not on disk yet
+        },
       });
       this.activeHowls.set(cueId, howl);
     } else {
       howl.volume(finalVolume);
     }
 
-    howl.play();
+    try {
+      howl.play();
+    } catch (e) {
+      // Ignored for missing files; synth fallback handles sound
+    }
+
     return howl;
+  }
+
+  /**
+   * Synthesize real WebAudio sound effects when physical MP3 files are absent.
+   */
+  private playSynthesizedCue(cueId: CueId, volume: number): void {
+    if (cueId === 'sfx.interact') {
+      this.synthesizeChime([523.25, 659.25], 0.12, volume); // C5 -> E5
+    } else if (cueId === 'sfx.sigil.cast') {
+      this.synthesizeChime([523.25, 659.25, 783.99, 1046.5], 0.25, volume); // C5 -> E5 -> G5 -> C6
+    } else if (cueId === 'sfx.sigil.fail') {
+      this.synthesizeBuzz(220, 0.2, volume); // Low A3 buzz
+    } else if (cueId === 'sfx.secret') {
+      this.synthesizeChime([659.25, 830.61, 987.77, 1318.51], 0.3, volume); // E5 major
+    }
+  }
+
+  private synthesizeChime(freqs: number[], durationSec: number, volumeGain: number = 0.5): void {
+    try {
+      const ctx = Howler.ctx || new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (!ctx || ctx.state === 'suspended') return;
+
+      freqs.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.05);
+
+        const startTime = ctx.currentTime + idx * 0.05;
+        gain.gain.setValueAtTime(0.001, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.2 * volumeGain, startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + durationSec);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(startTime);
+        osc.stop(startTime + durationSec);
+      });
+    } catch (e) {
+      // AudioContext unavailable
+    }
+  }
+
+  private synthesizeBuzz(freq: number, durationSec: number, volumeGain: number = 0.5): void {
+    try {
+      const ctx = Howler.ctx || new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (!ctx || ctx.state === 'suspended') return;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(freq * 0.7, ctx.currentTime + durationSec);
+
+      gain.gain.setValueAtTime(0.15 * volumeGain, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + durationSec);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + durationSec);
+    } catch (e) {
+      // AudioContext unavailable
+    }
   }
 
   public stopCue(cueId: CueId, fadeOutMs: number = 0): void {
