@@ -14,6 +14,7 @@ import { Interactable } from '@/engine/interaction/Interactable';
 import { FocusRing } from '@/engine/interaction/FocusRing';
 import { globalInteractionRegistry } from '@/engine/interaction/InteractionRegistry';
 import { globalThreadController } from '@/engine/thread/ThreadController';
+import { AudioProvider } from '@/engine/audio/AudioProvider';
 
 const InteractiveSceneContent: React.FC = () => {
   const [activeMessage, setActiveMessage] = useState<string | null>(null);
@@ -132,64 +133,66 @@ export const App: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <StatsHUD />
-      <SceneJumper />
-      <SigilTrainer />
+    <AudioProvider>
+      <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+        <StatsHUD />
+        <SceneJumper />
+        <SigilTrainer />
 
-      {/* Ghost Path Assist Overlay */}
-      <SigilGhost sigilId="kindle" visible={assistActive} />
+        {/* Ghost Path Assist Overlay */}
+        <SigilGhost sigilId="kindle" visible={assistActive} />
 
-      {/* Active Scene & Thread Overlay HUD */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: '16px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 999,
-          padding: '8px 16px',
-          backgroundColor: 'rgba(11, 9, 10, 0.75)',
-          border: '1px solid rgba(244, 235, 217, 0.2)',
-          borderRadius: '20px',
-          color: '#f4ebd9',
-          fontSize: '13px',
-          fontFamily: 'sans-serif',
-          pointerEvents: 'none',
-          display: 'flex',
-          gap: '12px',
-          alignItems: 'center',
-        }}
-      >
-        <span>
-          Active Scene: <strong style={{ color: '#f59e0b' }}>{currentScene}</strong>
-        </span>
-        <span style={{ opacity: 0.4 }}>|</span>
-        <span>
-          Thread:{' '}
-          <strong style={{ color: isDrawing ? '#10b981' : '#f4ebd9' }}>
-            {isDrawing ? 'Drawing' : 'Idle'}
-          </strong>
-        </span>
-        <span style={{ opacity: 0.4 }}>|</span>
-        <span style={{ fontSize: '11px', opacity: 0.8 }}>
-          Press <strong>Tab</strong> to navigate objects
-        </span>
+        {/* Active Scene & Thread Overlay HUD */}
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '16px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 999,
+            padding: '8px 16px',
+            backgroundColor: 'rgba(11, 9, 10, 0.75)',
+            border: '1px solid rgba(244, 235, 217, 0.2)',
+            borderRadius: '20px',
+            color: '#f4ebd9',
+            fontSize: '13px',
+            fontFamily: 'sans-serif',
+            pointerEvents: 'none',
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'center',
+          }}
+        >
+          <span>
+            Active Scene: <strong style={{ color: '#f59e0b' }}>{currentScene}</strong>
+          </span>
+          <span style={{ opacity: 0.4 }}>|</span>
+          <span>
+            Thread:{' '}
+            <strong style={{ color: isDrawing ? '#10b981' : '#f4ebd9' }}>
+              {isDrawing ? 'Drawing' : 'Idle'}
+            </strong>
+          </span>
+          <span style={{ opacity: 0.4 }}>|</span>
+          <span style={{ fontSize: '11px', opacity: 0.8 }}>
+            Press <strong>Tab</strong> to navigate objects
+          </span>
+        </div>
+
+        <Canvas
+          dpr={[1, 1.75]}
+          gl={{
+            powerPreference: 'high-performance',
+            antialias: false,
+            alpha: false,
+          }}
+          camera={{ position: [0, 0, 5], fov: 60 }}
+          style={{ background: '#0b090a' }}
+        >
+          <InteractiveSceneContent />
+        </Canvas>
       </div>
-
-      <Canvas
-        dpr={[1, 1.75]}
-        gl={{
-          powerPreference: 'high-performance',
-          antialias: false,
-          alpha: false,
-        }}
-        camera={{ position: [0, 0, 5], fov: 60 }}
-        style={{ background: '#0b090a' }}
-      >
-        <InteractiveSceneContent />
-      </Canvas>
-    </div>
+    </AudioProvider>
   );
 };
 
