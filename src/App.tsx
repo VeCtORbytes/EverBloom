@@ -19,6 +19,7 @@ import { SeedPulseProgress } from '@/ui/SeedPulseProgress';
 import { Overlay } from '@/ui/Overlay';
 import { Captions } from '@/ui/Captions';
 import { PrologueWorld } from '@/worlds/prologue/PrologueWorld';
+import { GardenWorld } from '@/worlds/garden/GardenWorld';
 
 const TestSceneContent: React.FC = () => {
   const [activeMessage, setActiveMessage] = useState<string | null>(null);
@@ -94,6 +95,17 @@ const ActiveSceneContent: React.FC = () => {
     return (
       <>
         <PrologueWorld />
+        <FocusRing />
+        <ThreadTrail />
+        <CursorMote />
+      </>
+    );
+  }
+
+  if (currentScene === 'garden') {
+    return (
+      <>
+        <GardenWorld />
         <FocusRing />
         <ThreadTrail />
         <CursorMote />
