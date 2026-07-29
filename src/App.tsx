@@ -5,6 +5,9 @@ import * as THREE from 'three';
 import { StatsHUD } from '@/dev/StatsHUD';
 import { SceneJumper } from '@/dev/SceneJumper';
 import { useScene } from '@/engine/core/hooks';
+import { ThreadTrail } from '@/engine/thread/ThreadTrail';
+import { CursorMote } from '@/engine/thread/CursorMote';
+import { useThread } from '@/engine/thread/useThread';
 
 const PlaceholderMesh: React.FC = () => {
   const meshRef = useRef<THREE.Mesh>(null);
@@ -31,12 +34,13 @@ const PlaceholderMesh: React.FC = () => {
 
 export const App: React.FC = () => {
   const { currentScene } = useScene();
+  const { isDrawing } = useThread();
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <StatsHUD />
       <SceneJumper />
-      
+
       {/* Active Scene Overlay HUD */}
       <div
         style={{
@@ -53,9 +57,21 @@ export const App: React.FC = () => {
           fontSize: '13px',
           fontFamily: 'sans-serif',
           pointerEvents: 'none',
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center',
         }}
       >
-        Active Scene: <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>{currentScene}</span>
+        <span>
+          Active Scene: <strong style={{ color: '#f59e0b' }}>{currentScene}</strong>
+        </span>
+        <span style={{ opacity: 0.4 }}>|</span>
+        <span>
+          Thread State:{' '}
+          <strong style={{ color: isDrawing ? '#10b981' : '#f4ebd9' }}>
+            {isDrawing ? 'Drawing' : 'Idle'}
+          </strong>
+        </span>
       </div>
 
       <Canvas
@@ -71,6 +87,10 @@ export const App: React.FC = () => {
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1.5} color="#f59e0b" />
         <PlaceholderMesh />
+
+        {/* Phase 3 Thread Verb */}
+        <ThreadTrail />
+        <CursorMote />
       </Canvas>
     </div>
   );
