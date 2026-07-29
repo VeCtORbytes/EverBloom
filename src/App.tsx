@@ -15,6 +15,7 @@ import { FocusRing } from '@/engine/interaction/FocusRing';
 import { globalInteractionRegistry } from '@/engine/interaction/InteractionRegistry';
 import { globalThreadController } from '@/engine/thread/ThreadController';
 import { AudioProvider } from '@/engine/audio/AudioProvider';
+import { SeedPulseProgress } from '@/ui/SeedPulseProgress';
 
 const InteractiveSceneContent: React.FC = () => {
   const [activeMessage, setActiveMessage] = useState<string | null>(null);
@@ -141,6 +142,9 @@ export const App: React.FC = () => {
 
         {/* Ghost Path Assist Overlay */}
         <SigilGhost sigilId="kindle" visible={assistActive} />
+
+        {/* Diegetic Seed Pulse Progress Component */}
+        <SeedPulseProgress progress={1.0} visible={false} />
 
         {/* Active Scene & Thread Overlay HUD */}
         <div
